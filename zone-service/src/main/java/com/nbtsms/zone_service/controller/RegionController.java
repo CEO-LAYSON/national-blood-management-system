@@ -4,6 +4,12 @@ import com.nbtsms.zone_service.dto.CreateRegionDTO;
 import com.nbtsms.zone_service.dto.RegionResponseDTO;
 import com.nbtsms.zone_service.dto.ZoneResponseWrapperDTO;
 import com.nbtsms.zone_service.service.impl.RegionServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -19,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Tag(name = "Regions", description = "Endpoints for managing regions within zones")
 @RestController
 @RequestMapping("regions")
 public class RegionController {
@@ -28,11 +35,21 @@ public class RegionController {
         this.regionService = regionService;
     }
 
+    @Operation(summary = "Check if region exists")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Region existence status")
+    })
     @GetMapping("{regionId}/exists")
     public boolean regionExists(@PathVariable("regionId") UUID regionId) {
         return regionService.regionExists(regionId);
     }
 
+    @Operation(summary = "Create a new region")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Region created successfully",
+                    content = @Content(schema = @Schema(implementation = ZoneResponseWrapperDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_USER')")
     public ResponseEntity<ZoneResponseWrapperDTO<Map<String, Object>>> createRegion(
@@ -47,6 +64,11 @@ public class RegionController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @Operation(summary = "Get all regions by zone with pagination")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Regions retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = ZoneResponseWrapperDTO.class)))
+    })
     @GetMapping("{zoneId}/zone")
     @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_SUPER_USER', 'ROLE_ADMIN', 'ROLE_COUNSELOR', 'ROLE_LAB_TECHNICIAN', 'ROLE_ORGANIZER')")
     public ResponseEntity<ZoneResponseWrapperDTO<Page<RegionResponseDTO>>> getAllByZone(
@@ -66,6 +88,11 @@ public class RegionController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Operation(summary = "Get all regions by zone")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Regions retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = ZoneResponseWrapperDTO.class)))
+    })
     @GetMapping("region/{zoneId}/all")
     @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_SUPER_USER', 'ROLE_ADMIN', 'ROLE_COUNSELOR', 'ROLE_LAB_TECHNICIAN', 'ROLE_ORGANIZER')")
     public ResponseEntity<ZoneResponseWrapperDTO<List<RegionResponseDTO>>> getRegionsByZoneId(
@@ -80,6 +107,12 @@ public class RegionController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Operation(summary = "Get region by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Region retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = ZoneResponseWrapperDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Region not found")
+    })
     @GetMapping("{regionId}/region")
     @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_SUPER_USER', 'ROLE_ADMIN', 'ROLE_COUNSELOR', 'ROLE_LAB_TECHNICIAN', 'ROLE_ORGANIZER')")
     public ResponseEntity<ZoneResponseWrapperDTO<RegionResponseDTO>> getRegionById(

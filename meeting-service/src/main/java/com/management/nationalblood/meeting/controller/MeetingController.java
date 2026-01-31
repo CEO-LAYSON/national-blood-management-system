@@ -5,6 +5,12 @@ import com.management.nationalblood.meeting.enums.MeetingStatus;
 import com.management.nationalblood.meeting.exception.BadRequestException;
 import com.management.nationalblood.meeting.exception.NotFoundException;
 import com.management.nationalblood.meeting.service.impl.MeetingServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -21,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Tag(name = "Meetings", description = "Endpoints for managing blood donation meetings")
 @RestController
 @RequestMapping("")
 public class MeetingController {
@@ -30,6 +37,12 @@ public class MeetingController {
         this.meetingService = meetingService;
     }
 
+    @Operation(summary = "Create a new meeting")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Meeting created successfully",
+                    content = @Content(schema = @Schema(implementation = MeetingResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Access denied - Organizer role required")
+    })
     @PreAuthorize("hasAnyAuthority('ROLE_ORGANIZER')")
     @PostMapping
     public ResponseEntity<MeetingResponseDTO<Map<String, Object>>> createMeeting(
@@ -44,6 +57,12 @@ public class MeetingController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @Operation(summary = "Get meeting by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Meeting retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = MeetingResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Meeting not found")
+    })
     @GetMapping("meeting/{meetingId}")
     @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_SUPER_USER', 'ROLE_ADMIN', 'ROLE_COUNSELOR', 'ROLE_LAB_TECHNICIAN', 'ROLE_ORGANIZER')")
     public ResponseEntity<MeetingResponseDTO<MeetingDTO>> getMeeting(
@@ -58,6 +77,11 @@ public class MeetingController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Operation(summary = "Get meetings by organizer with optional filtering")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Meetings retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = MeetingResponseDTO.class)))
+    })
     @GetMapping("organizer/{organizerId}/meetings")
     @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_SUPER_USER', 'ROLE_ADMIN', 'ROLE_COUNSELOR', 'ROLE_LAB_TECHNICIAN', 'ROLE_ORGANIZER')")
     public ResponseEntity<MeetingResponseDTO<Page<MeetingDTO>>> getMeetingsByOrganizer(
@@ -80,6 +104,11 @@ public class MeetingController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Operation(summary = "Get meetings by staff with optional filtering")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Meetings retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = MeetingResponseDTO.class)))
+    })
     @GetMapping("staff/{staffId}/meetings")
     @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_SUPER_USER', 'ROLE_ADMIN', 'ROLE_COUNSELOR', 'ROLE_LAB_TECHNICIAN', 'ROLE_ORGANIZER')")
     public ResponseEntity<MeetingResponseDTO<Page<MeetingDTO>>> getMeetingsByStaff(
@@ -102,6 +131,12 @@ public class MeetingController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Operation(summary = "Assign staff to meeting")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Staff assigned successfully",
+                    content = @Content(schema = @Schema(implementation = MeetingResponseDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
     @PreAuthorize("hasAnyAuthority('ROLE_ORGANIZER')")
     @PostMapping("/{meetingId}/assign-staff")
     public ResponseEntity<MeetingResponseDTO<Map<String, Object>>> assignStaffToMeeting(
@@ -119,6 +154,11 @@ public class MeetingController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Operation(summary = "Remove staff from meeting")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Staff removed successfully",
+                    content = @Content(schema = @Schema(implementation = MeetingResponseDTO.class)))
+    })
     @PreAuthorize("hasAnyAuthority('ROLE_ORGANIZER')")
     @PostMapping("{meetingId}/remove-staff")
     public ResponseEntity<MeetingResponseDTO<Map<String, Object>>> removeStaffFromMeeting(
@@ -136,6 +176,12 @@ public class MeetingController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Operation(summary = "Reschedule meeting")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Meeting rescheduled successfully",
+                    content = @Content(schema = @Schema(implementation = MeetingResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Meeting not found")
+    })
     @PutMapping("{meetingId}/reschedule")
     @PreAuthorize("hasAnyAuthority('ROLE_ORGANIZER')")
     public ResponseEntity<MeetingResponseDTO<Map<String, Object>>> rescheduleMeeting(
@@ -154,6 +200,12 @@ public class MeetingController {
         );
     }
 
+    @Operation(summary = "Update meeting status")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Meeting status updated successfully",
+                    content = @Content(schema = @Schema(implementation = MeetingResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Meeting not found")
+    })
     @PutMapping("{meetingId}/status")
     @PreAuthorize("hasAnyAuthority('ROLE_ORGANIZER')")
     public ResponseEntity<MeetingResponseDTO<Map<String, Object>>> updateMeetingStatus(
